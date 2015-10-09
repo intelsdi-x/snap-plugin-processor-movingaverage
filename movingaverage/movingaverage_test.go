@@ -24,11 +24,11 @@ func randInt(min int, max int) int {
 func TestMovingAverageProcessor(t *testing.T) {
 	meta := Meta()
 	Convey("Meta should return metadata for the plugin", t, func() {
-		Convey("So meta.Name should equal pulse-processor-movingaverage", func() {
-			So(meta.Name, ShouldResemble, name)
+		Convey("So meta.Name should equal movingaverage", func() {
+			So(meta.Name, ShouldEqual, "movingaverage")
 		})
-		Convey("So meta.Version should equal 1", func() {
-			So(meta.Version, ShouldResemble, version)
+		Convey("So meta.Version should equal 2", func() {
+			So(meta.Version, ShouldEqual, 2)
 		})
 		Convey("So meta.Type should be of type plugin.ProcessorPluginType", func() {
 			So(meta.Type, ShouldResemble, plugin.ProcessorPluginType)
