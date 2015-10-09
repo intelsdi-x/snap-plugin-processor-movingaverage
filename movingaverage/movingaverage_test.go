@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/intelsdi-x/pulse/control/plugin"
+	"github.com/intelsdi-x/pulse/control/plugin/cpolicy"
 	"github.com/intelsdi-x/pulse/core/ctypes"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -18,6 +19,46 @@ import (
 //Random number generator
 func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
+}
+
+func TestMovingAverageProcessor(t *testing.T) {
+	meta := Meta()
+	Convey("Meta should return metadata for the plugin", t, func() {
+		Convey("So meta.Name should equal pulse-processor-movingaverage", func() {
+			So(meta.Name, ShouldResemble, name)
+		})
+		Convey("So meta.Version should equal 1", func() {
+			So(meta.Version, ShouldResemble, version)
+		})
+		Convey("So meta.Type should be of type plugin.ProcessorPluginType", func() {
+			So(meta.Type, ShouldResemble, plugin.ProcessorPluginType)
+		})
+	})
+
+	proc := NewMovingaverageProcessor()
+	Convey("Create Movingaverage processor", t, func() {
+		Convey("So proc should not be nil", func() {
+			So(proc, ShouldNotBeNil)
+		})
+		Convey("So proc should be of type movingAverageProcessor", func() {
+			So(proc, ShouldHaveSameTypeAs, &movingAverageProcessor{})
+		})
+		Convey("proc.GetConfigPolicy should return a config policy", func() {
+			configPolicy, _ := proc.GetConfigPolicy()
+			Convey("So config policy should be a cpolicy.ConfigPolicy", func() {
+				So(configPolicy, ShouldHaveSameTypeAs, &cpolicy.ConfigPolicy{})
+			})
+			testConfig := make(map[string]ctypes.ConfigValue)
+			testConfig["MovingAvgBufLength"] = ctypes.ConfigValueInt{Value: 10}
+			cfg, errs := configPolicy.Get([]string{""}).Process(testConfig)
+			Convey("So config policy should process testConfig and return a config", func() {
+				So(cfg, ShouldNotBeNil)
+			})
+			Convey("So testConfig processing should return no errors", func() {
+				So(errs.HasErrors(), ShouldBeFalse)
+			})
+		})
+	})
 }
 
 func TestMovingAverageProcessorMetrics(t *testing.T) {
