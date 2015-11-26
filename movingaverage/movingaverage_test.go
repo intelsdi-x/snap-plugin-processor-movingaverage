@@ -28,9 +28,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/intelsdi-x/pulse/control/plugin"
-	"github.com/intelsdi-x/pulse/control/plugin/cpolicy"
-	"github.com/intelsdi-x/pulse/core/ctypes"
+	"github.com/intelsdi-x/snap/control/plugin"
+	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
+	"github.com/intelsdi-x/snap/core/ctypes"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -98,7 +98,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 			enc.Encode(metrics)
 			movingAverageObj := NewMovingaverageProcessor()
 
-			_, received_data, _ := movingAverageObj.Process("pulse.gob", buf.Bytes(), config)
+			_, received_data, _ := movingAverageObj.Process("snap.gob", buf.Bytes(), config)
 
 			var metrics_new []plugin.PluginMetricType
 
@@ -123,7 +123,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 
 			movingAverageObj := NewMovingaverageProcessor()
 
-			_, received_data, _ := movingAverageObj.Process("pulse.gob", buf.Bytes(), config)
+			_, received_data, _ := movingAverageObj.Process("snap.gob", buf.Bytes(), config)
 
 			var metrics_new []plugin.PluginMetricType
 
@@ -146,7 +146,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 
 			movingAverageObj := NewMovingaverageProcessor()
 
-			_, received_data, _ := movingAverageObj.Process("pulse.gob", buf.Bytes(), nil)
+			_, received_data, _ := movingAverageObj.Process("snap.gob", buf.Bytes(), nil)
 
 			var metrics_new []plugin.PluginMetricType
 
@@ -169,7 +169,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 			enc.Encode(metrics)
 			movingAverageObj := NewMovingaverageProcessor()
 
-			_, received_data, _ := movingAverageObj.Process("pulse.gob", buf.Bytes(), nil)
+			_, received_data, _ := movingAverageObj.Process("snap.gob", buf.Bytes(), nil)
 
 			var metrics_new []plugin.PluginMetricType
 
@@ -192,7 +192,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 			enc.Encode(metrics)
 			movingAverageObj := NewMovingaverageProcessor()
 
-			_, received_data, _ := movingAverageObj.Process("pulse.gob", buf.Bytes(), nil)
+			_, received_data, _ := movingAverageObj.Process("snap.gob", buf.Bytes(), nil)
 
 			var metrics_new []plugin.PluginMetricType
 
@@ -215,7 +215,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 
 			movingAverageObj := NewMovingaverageProcessor()
 
-			_, received_data, _ := movingAverageObj.Process("pulse.gob", buf.Bytes(), nil)
+			_, received_data, _ := movingAverageObj.Process("snap.gob", buf.Bytes(), nil)
 
 			var metrics_new []plugin.PluginMetricType
 
