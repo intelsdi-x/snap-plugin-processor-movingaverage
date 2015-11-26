@@ -91,7 +91,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 				time.Sleep(3)
 				rand.Seed(time.Now().UTC().UnixNano())
 				data := randInt(65, 90)
-				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", data)
+				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", nil, nil, data)
 			}
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
@@ -115,7 +115,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 				time.Sleep(3)
 				rand.Seed(time.Now().UTC().UnixNano())
 				data := randInt(65, 90)
-				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", float32(data))
+				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", nil, nil, float32(data))
 			}
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
@@ -138,7 +138,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 				time.Sleep(3)
 				rand.Seed(time.Now().UTC().UnixNano())
 				data := randInt(65, 90)
-				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", float64(data))
+				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", nil, nil, float64(data))
 			}
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
@@ -162,7 +162,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 				time.Sleep(3)
 				rand.Seed(time.Now().UTC().UnixNano())
 				data := randInt(65, 90)
-				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", uint32(data))
+				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", nil, nil, uint32(data))
 			}
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
@@ -185,7 +185,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 				time.Sleep(3)
 				rand.Seed(time.Now().UTC().UnixNano())
 				data := randInt(65, 90)
-				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", uint64(data))
+				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", nil, nil, uint64(data))
 			}
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
@@ -207,7 +207,7 @@ func TestMovingAverageProcessorMetrics(t *testing.T) {
 			for i, _ := range metrics {
 
 				data := "I am an unknow data Type"
-				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", data)
+				metrics[i] = *plugin.NewPluginMetricType([]string{"foo", "bar"}, time.Now(), "", nil, nil, data)
 			}
 			var buf bytes.Buffer
 			enc := gob.NewEncoder(&buf)
