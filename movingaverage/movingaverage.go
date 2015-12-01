@@ -32,7 +32,7 @@ import (
 
 const (
 	name       = "movingaverage"
-	version    = 3
+	version    = 4
 	pluginType = plugin.ProcessorPluginType
 )
 
