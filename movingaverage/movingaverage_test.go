@@ -45,8 +45,8 @@ func TestMovingAverageProcessor(t *testing.T) {
 		Convey("So meta.Name should equal movingaverage", func() {
 			So(meta.Name, ShouldEqual, "movingaverage")
 		})
-		Convey("So meta.Version should equal 3", func() {
-			So(meta.Version, ShouldEqual, 3)
+		Convey("So meta.Version should equal version", func() {
+			So(meta.Version, ShouldEqual, version)
 		})
 		Convey("So meta.Type should be of type plugin.ProcessorPluginType", func() {
 			So(meta.Type, ShouldResemble, plugin.ProcessorPluginType)
