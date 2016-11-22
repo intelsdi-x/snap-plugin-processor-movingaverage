@@ -18,7 +18,7 @@ Snap plugin intended to process data and return a moving average of the data
 
 ### Installation
 #### Download movingaverage plugin binary:
-You can get the pre-built binaries for your OS and architecture from the plugin's [GitHub Releases](https://github.com/intelsdi-x/snap-plugin-processor-movingaverage/releases) page. Download the plugin from the latest release and load it into `snapd` (`/opt/snap/plugins` is the default location for Snap packages).
+You can get the pre-built binaries for your OS and architecture from the plugin's [GitHub Releases](https://github.com/intelsdi-x/snap-plugin-processor-movingaverage/releases) page. Download the plugin from the latest release and load it into `snapteld` (`/opt/snap/plugins` is the default location for Snap packages).
 
 #### To build the plugin binary:
 Fork https://github.com/intelsdi-x/snap-plugin-processor-movingaverage
@@ -46,7 +46,7 @@ Documentation for Snap collector psutil plugin can be found [here](https://githu
 
 In one terminal window, open the Snap daemon :
 ```
-$ snapd -t 0 -l 1
+$ snapteld -t 0 -l 1
 ```
 The option "-l 1" it is for setting the debugging log level and "-t 0" is for disabling plugin signing.
 
@@ -58,14 +58,14 @@ $ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-collector-psutil/lat
 $ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-processor-movingaverage/latest/linux/x86_64/snap-plugin-processor-movingaverage
 $ wget http://snap.ci.snap-telemetry.io/plugins/snap-plugin-publisher-file/latest/linux/x86_64/snap-plugin-publisher-file
 $ chmod 755 snap-plugin-*
-$ snapctl plugin load snap-plugin-collector-psutil
-$ snapctl plugin load snap-plugin-publisher-file
-$ snapctl plugin load snap-plugin-processor-movingaverage
+$ snaptel plugin load snap-plugin-collector-psutil
+$ snaptel plugin load snap-plugin-publisher-file
+$ snaptel plugin load snap-plugin-processor-movingaverage
 ```
 
 See available metrics for your system
 ```
-$ snapctl metric list
+$ snaptel metric list
 ```
 
 Create a task file. For example, sample-psutil-movingavg-task.json:
@@ -111,7 +111,7 @@ Create a task file. For example, sample-psutil-movingavg-task.json:
 
 Start task:
 ```
-$ snapctl task create -t sample-psutil-movingavg-task.json
+$ snaptel task create -t sample-psutil-movingavg-task.json
 Using task manifest to create task
 Task created
 ID: 02dd7ff4-8106-47e9-8b86-70067cd0a850
@@ -119,16 +119,16 @@ Name: Task-02dd7ff4-8106-47e9-8b86-70067cd0a850
 State: Running
 ```
 
-See realtime output from `snapctl task watch <task_id>` (CTRL+C to exit)
+See realtime output from `snaptel task watch <task_id>` (CTRL+C to exit)
 ```
-snapctl task watch 02dd7ff4-8106-47e9-8b86-70067cd0a850
+snaptel task watch 02dd7ff4-8106-47e9-8b86-70067cd0a850
 ```
 
 This data is published to a file `/tmp/published` per task specification
 
 Stop task:
 ```
-$ snapctl task stop 02dd7ff4-8106-47e9-8b86-70067cd0a850
+$ snaptel task stop 02dd7ff4-8106-47e9-8b86-70067cd0a850
 Task stopped:
 ID: 02dd7ff4-8106-47e9-8b86-70067cd0a850
 ```
