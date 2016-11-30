@@ -68,50 +68,49 @@ See available metrics for your system
 $ snaptel metric list
 ```
 
-Create a task file. For example, sample-psutil-movingavg-task.json:
+Create a task file. For example, psutil-movingaverage-file.json:
 
 ```
 {
-    "version": 1,
-    "schedule": {
-        "type": "simple",
-        "interval": "1s"
-    },
-    "workflow": {
-        "collect": {
-            "metrics": {
-                "/intel/psutil/load/load1": {},
-                "/intel/psutil/load/load5": {},
-                "/intel/psutil/load/load15": {},
-                "/intel/psutil/vm/free": {},
-                "/intel/psutil/vm/used": {}
-             },
-            "process": [
-                {
-                    "plugin_name": "movingaverage",
-                    "config":
-                        {
-                            "MovingAvgBufLength": 5
-                        }
-                    "process": null,
-                    "publish": [
-                        {
-                            "plugin_name": "file",
-                            "config": {
-                                "file": "/tmp/published"
-                            }
-                        }
-                    ]
-                }
-            ]
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "1s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/psutil/load/load1": {},
+        "/intel/psutil/load/load5": {},
+        "/intel/psutil/load/load15": {},
+        "/intel/psutil/vm/free": {},
+        "/intel/psutil/vm/used": {}
+      },
+      "process": [
+        {
+          "plugin_name": "movingaverage",
+          "config": {
+            "MovingAvgBufLength": 5
+          },
+          "process": null,
+          "publish": [
+            {
+              "plugin_name": "file",
+              "config": {
+                "file": "/tmp/published_movingaverage.log"
+              }
+            }
+          ]
         }
+      ]
     }
+  }
 }
 ```
 
 Start task:
 ```
-$ snaptel task create -t sample-psutil-movingavg-task.json
+$ snaptel task create -t psutil-movingaverage-file.json
 Using task manifest to create task
 Task created
 ID: 02dd7ff4-8106-47e9-8b86-70067cd0a850
@@ -124,7 +123,7 @@ See realtime output from `snaptel task watch <task_id>` (CTRL+C to exit)
 snaptel task watch 02dd7ff4-8106-47e9-8b86-70067cd0a850
 ```
 
-This data is published to a file `/tmp/published` per task specification
+This data is published to a file `/tmp/published_movingaverage.log` per task specification
 
 Stop task:
 ```
