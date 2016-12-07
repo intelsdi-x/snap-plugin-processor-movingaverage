@@ -3,7 +3,7 @@ sudo: false
 language: go
 go:
 - 1.6.3
-- 1.7.1
+- 1.7.3
 env:
   global:
   - ORG_PATH=/home/travis/gopath/src/github.com/intelsdi-x
@@ -42,7 +42,7 @@ deploy:
   on:
     repo: intelsdi-x/snap-plugin-processor-movingaverage
     branch: master
-    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.1"
+    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.3"
 - provider: s3
   access_key_id: AKIAINMB43VSSPFZISAA
   secret_access_key:
@@ -56,7 +56,7 @@ deploy:
   on:
     repo: intelsdi-x/snap-plugin-processor-movingaverage
     tags: true
-    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.1"
+    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.3"
 - provider: releases
   api_key:
     secure: wu8mS9ZTmcAh/65XcDsxXdXBPiVwmCiQF6a3RfnRP08E9Es3bYMRMLtSthZsSvq1ZTm0SHJUjiOajNNSvgN4DNE22wrjvi3SNuZcZwwV/Elh3ouTcrxe6hovSpG19y2NamSkrJ2d4XFWv+4RqApcEj6+jQtn5s3LdOCEbKfVWITz23ya5kUV5Mv2xjeFdexi0l9LntXNXYAOIns8aQACdvdDkU239cyKARSQHiU6r9AE7kJJmbMShfaC7XqifKr/qOK5zd7REDHQjI6mbHtWJhnENq14m/JeRASBMGx52+xZ0slOsS+VcC7l5D8iVmQb0ttyS7ctmrTKVZZHM91+++BRRrNnGVB1nu6T0RsOatunZwyL7Wq0HIkdw6J4aZgFbPJKrJbsqceIJTH2pp7Gri/5mJrLv1e+vAdbD5IiKTh0Unix3zcRLuEwAqP4vPKI+Iu6GHHbIf67sMoCMMqItZiSOXwyNTBHFXRdrlADklHVgU0mXdz2UPOMw2MKNQQT35WyZtxcndW93u7/nyGbHfGtE69p5z6urC6YWgct17v3hwzOyQhoIjgfJzeFOTeoPo7IYhDG9uAbCW3zKzhsGy45+lhaAq52XCbg+t1xSTXGwi8ga73W3xoLOyZdlU0iRW59kzES1GgC3XTARdRSFjlQoPLb40V6UW1wN06f9u8=
@@ -66,4 +66,4 @@ deploy:
   on:
     repo: intelsdi-x/snap-plugin-processor-movingaverage
     tags: true
-    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.1"
+    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.3"
