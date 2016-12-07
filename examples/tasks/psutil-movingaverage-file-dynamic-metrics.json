@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "1s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/intel/psutil/net/*/packets_recv": {}
+      },
+      "process": [
+        {
+          "plugin_name": "movingaverage",
+          "config": {
+            "MovingAvgBufLength": 5
+          },
+          "publish": [
+            {
+              "plugin_name": "file",
+              "config": {
+                "file": "/tmp/published_movingaverage_dynamic_metrics.log"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
