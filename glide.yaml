@@ -1,7 +1,7 @@
 package: github.com/intelsdi-x/snap-plugin-processor-movingaverage
 import:
 - package: github.com/intelsdi-x/snap
-  version: dbbb1ae3ef7282ac02bd6e14ef44d93fb7c9e85b
+  version: ^1.0.0
   subpackages:
   - control/plugin
   - core
