@@ -2,18 +2,19 @@
 sudo: false
 language: go
 go:
-- 1.6.3
-- 1.7.3
+- 1.7.x
+- 1.8.x
 env:
   global:
   - ORG_PATH=/home/travis/gopath/src/github.com/intelsdi-x
   - SNAP_PLUGIN_SOURCE=/home/travis/gopath/src/github.com/${TRAVIS_REPO_SLUG}
+  - GLIDE_HOME="${HOME}/.glide"
   matrix:
   - TEST_TYPE=small
-  - TEST_TYPE=build
+  - TEST_TYPE: build
 matrix:
   exclude:
-  - go: 1.6.3
+  - go: 1.7.x
     env: TEST_TYPE=build
 before_install:
 - "[[ -d $SNAP_PLUGIN_SOURCE ]] || mkdir -p $ORG_PATH && ln -s $TRAVIS_BUILD_DIR $SNAP_PLUGIN_SOURCE"
@@ -30,9 +31,8 @@ before_deploy:
 - "./scripts/pre_deploy.sh"
 deploy:
 - provider: s3
-  access_key_id: AKIAINMB43VSSPFZISAA
-  secret_access_key:
-    secure: vtCgrZg4BIjtJb2S5Jqt4hsVXhqkgzxS/LD/bvLyid4RAB5Jd6rMWmTXd8Ttqr9dqRcPK7OGX6t4JU6AHJAZ1jSrPuhuaKrNmVSobXXVi2dXsUnuyjzAhK/p4+vecFYqWKy4/3CU+ZTaA9V0UZkbLLPu5G9n854ITEMTKZfU0zRUSblBos2woxxV7E/jbG9JO8Nwpy/pDaUg7CGOaKrBsAFI3tTSciNIXuOmQimWQH+Qdqv45gPihMYPpBTKm0g7g1QaZOWDfSApsmNK+3yIRfXHsjuJ1LeD/E6MWhRjz8HERtJySeTDq5CZgXIaXprFNKaIZiv0qIm6UZXiiJRgv5zEk642+VWfTO1zDuiJVIxYW1aPXf0ausC0tZSMut/1i7hAnr2Z3nBYP9icrKd7emnz07ZD7zsEopyByhvx+jHfxOJYvC57hKWc3PWtPvGUJ12ekM5TPLF3sXxwpuDgagCCXQ286ZmcK8N824TMjDIcfdJwnNd9USGTyf+Ut4MTeeeHWVCQPGFPNyuh+989IJxV49I6N+ZWnnx/rYBvjYdmxSSsT39p2pweICPwLBk5i2YRbzKljbnR5zeQnJ5Hz6WzUYmZp915GQ0XF6OY+havC3eBNKL5DvmwoKMHUD2fxfTEzIjPz9jR4dREGzk4InY6NNq/asUoZJ2E+KJWJf4=
+  access_key_id: $AWS_ACCESS_KEY_ID
+  secret_access_key: $AWS_SECRET_ACCESS_KEY
   bucket: snap.ci.snap-telemetry.io
   region: us-west-2
   skip_cleanup: true
@@ -42,11 +42,10 @@ deploy:
   on:
     repo: intelsdi-x/snap-plugin-processor-movingaverage
     branch: master
-    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.3"
+    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION =~ ^1\.8(|\.[0-9]+)$
 - provider: s3
-  access_key_id: AKIAINMB43VSSPFZISAA
-  secret_access_key:
-    secure: vtCgrZg4BIjtJb2S5Jqt4hsVXhqkgzxS/LD/bvLyid4RAB5Jd6rMWmTXd8Ttqr9dqRcPK7OGX6t4JU6AHJAZ1jSrPuhuaKrNmVSobXXVi2dXsUnuyjzAhK/p4+vecFYqWKy4/3CU+ZTaA9V0UZkbLLPu5G9n854ITEMTKZfU0zRUSblBos2woxxV7E/jbG9JO8Nwpy/pDaUg7CGOaKrBsAFI3tTSciNIXuOmQimWQH+Qdqv45gPihMYPpBTKm0g7g1QaZOWDfSApsmNK+3yIRfXHsjuJ1LeD/E6MWhRjz8HERtJySeTDq5CZgXIaXprFNKaIZiv0qIm6UZXiiJRgv5zEk642+VWfTO1zDuiJVIxYW1aPXf0ausC0tZSMut/1i7hAnr2Z3nBYP9icrKd7emnz07ZD7zsEopyByhvx+jHfxOJYvC57hKWc3PWtPvGUJ12ekM5TPLF3sXxwpuDgagCCXQ286ZmcK8N824TMjDIcfdJwnNd9USGTyf+Ut4MTeeeHWVCQPGFPNyuh+989IJxV49I6N+ZWnnx/rYBvjYdmxSSsT39p2pweICPwLBk5i2YRbzKljbnR5zeQnJ5Hz6WzUYmZp915GQ0XF6OY+havC3eBNKL5DvmwoKMHUD2fxfTEzIjPz9jR4dREGzk4InY6NNq/asUoZJ2E+KJWJf4=
+  access_key_id: $AWS_ACCESS_KEY_ID
+  secret_access_key: $AWS_SECRET_ACCESS_KEY
   bucket: snap.ci.snap-telemetry.io
   region: us-west-2
   skip_cleanup: true
@@ -56,14 +55,13 @@ deploy:
   on:
     repo: intelsdi-x/snap-plugin-processor-movingaverage
     tags: true
-    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.3"
+    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION =~ ^1\.8(|\.[0-9]+)$
 - provider: releases
-  api_key:
-    secure: wu8mS9ZTmcAh/65XcDsxXdXBPiVwmCiQF6a3RfnRP08E9Es3bYMRMLtSthZsSvq1ZTm0SHJUjiOajNNSvgN4DNE22wrjvi3SNuZcZwwV/Elh3ouTcrxe6hovSpG19y2NamSkrJ2d4XFWv+4RqApcEj6+jQtn5s3LdOCEbKfVWITz23ya5kUV5Mv2xjeFdexi0l9LntXNXYAOIns8aQACdvdDkU239cyKARSQHiU6r9AE7kJJmbMShfaC7XqifKr/qOK5zd7REDHQjI6mbHtWJhnENq14m/JeRASBMGx52+xZ0slOsS+VcC7l5D8iVmQb0ttyS7ctmrTKVZZHM91+++BRRrNnGVB1nu6T0RsOatunZwyL7Wq0HIkdw6J4aZgFbPJKrJbsqceIJTH2pp7Gri/5mJrLv1e+vAdbD5IiKTh0Unix3zcRLuEwAqP4vPKI+Iu6GHHbIf67sMoCMMqItZiSOXwyNTBHFXRdrlADklHVgU0mXdz2UPOMw2MKNQQT35WyZtxcndW93u7/nyGbHfGtE69p5z6urC6YWgct17v3hwzOyQhoIjgfJzeFOTeoPo7IYhDG9uAbCW3zKzhsGy45+lhaAq52XCbg+t1xSTXGwi8ga73W3xoLOyZdlU0iRW59kzES1GgC3XTARdRSFjlQoPLb40V6UW1wN06f9u8=
+  api_key: $GITHUB_API_KEY
   file:
     - release/snap-plugin-processor-movingaverage_linux_x86_64
   skip_cleanup: true
   on:
     repo: intelsdi-x/snap-plugin-processor-movingaverage
     tags: true
-    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION = "1.7.3"
+    condition: $TEST_TYPE = "build" && $TRAVIS_GO_VERSION =~ ^1\.8(|\.[0-9]+)$
