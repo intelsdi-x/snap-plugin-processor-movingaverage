@@ -19,13 +19,10 @@ limitations under the License.
 package main
 
 import (
-	"os"
-
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 	"github.com/intelsdi-x/snap-plugin-processor-movingaverage/movingaverage"
-	"github.com/intelsdi-x/snap/control/plugin"
 )
 
 func main() {
-	meta := movingaverage.Meta()
-	plugin.Start(meta, movingaverage.NewMovingaverageProcessor(), os.Args[1])
+	plugin.StartProcessor(movingaverage.New(), movingaverage.Name, movingaverage.Version, plugin.ConcurrencyCount(1))
 }
