@@ -32,7 +32,9 @@ var (
 )
 
 const (
-	Name    = "movingaverage"
+	// Name of the plugin
+	Name = "movingaverage"
+	// Version of the plugin
 	Version = 8
 
 	defaultBufferLength = 10
@@ -72,6 +74,8 @@ func newAverage(length int) *average {
 	return &avg
 }
 
+// castToFloat is used to convert data hidden under interface{} to float64
+// reflect is used, so that any compatible type can be cast
 func castToFloat(data interface{}) (float64, error) {
 	val := reflect.ValueOf(data)
 	val = reflect.Indirect(val)
