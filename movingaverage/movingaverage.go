@@ -19,350 +19,138 @@ limitations under the License.
 package movingaverage
 
 import (
-	"bytes"
-	"encoding/gob"
-	"errors"
 	"fmt"
+	"reflect"
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/intelsdi-x/snap/control/plugin"
-	"github.com/intelsdi-x/snap/control/plugin/cpolicy"
-	"github.com/intelsdi-x/snap/core/ctypes"
+	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
+)
+
+var (
+	floatType = reflect.TypeOf(float64(0))
 )
 
 const (
-	name       = "movingaverage"
-	version    = 7
-	pluginType = plugin.ProcessorPluginType
+	// Name of the plugin
+	Name = "movingaverage"
+	// Version of the plugin
+	Version = 8
+
+	defaultBufferLength = 10
 )
 
-// Meta returns a plugin meta data
-func Meta() *plugin.PluginMeta {
-	return plugin.NewPluginMeta(name, version, pluginType, []string{plugin.SnapGOBContentType}, []string{plugin.SnapGOBContentType})
-}
-
-func NewMovingaverageProcessor() *movingAverageProcessor {
-	a := make(map[string]*average)
-	return &movingAverageProcessor{
-		movingAverageMap: a,
-		movingBufLength:  10,
-	}
-}
-
-//The default buffer length is assumed to be 10
-
-func newmovingAverage(length int) *average {
-	initCounter := 0
-	return &average{
-		movingAverageBuf: make([]interface{}, length),
-		counter:          initCounter,
-	}
-}
-
-//movingAverageProcessor is a struct which has a map that acts like a buffer for storage of values for different namespace
-// key is a namespace (type: string)
-//value is a pointer average struct which stores values of the namespace key
-type movingAverageProcessor struct {
-	movingAverageMap map[string]*average
-	movingBufLength  int
-}
-
-//Each Namespace would have its own buffer-length and counter . Counter is used for the purpose of
-//replacing the oldest (when buffer is full) with the new value using mod operation
 type average struct {
-	movingAverageBuf []interface{}
-	counter          int
+	// buffer with past values
+	buffer []float64
+	// index of current element
+	counter int
+	// indicator if our buffer was already filled
+	full bool
 }
 
-//Gets the current counter for the particular namespace
-func (p *movingAverageProcessor) getCounter(namespace string) (int, error) {
-	if _, ok := p.movingAverageMap[namespace]; ok {
-		return p.movingAverageMap[namespace].counter, nil
-	} else {
-		return -1, errors.New("Namespace is not present in the map")
+// MAProcessor struct hold map with average object for each unique namespace passed to plugin
+type MAProcessor struct {
+	movingAverageMap map[string]*average
+	bufferLength     int
+	initialized      bool
+}
+
+// New returns initialized plugin instance
+func New() *MAProcessor {
+	return &MAProcessor{
+		movingAverageMap: make(map[string]*average),
+		bufferLength:     defaultBufferLength,
+		initialized:      false,
 	}
 }
 
-//Sets the counter for the particular namespace
-func (p *movingAverageProcessor) setCounter(namespace string, counter int) error {
-	if _, ok := p.movingAverageMap[namespace]; ok {
-		p.movingAverageMap[namespace].counter = counter
-		return nil
-	} else {
-		return errors.New("Namespace is not present in the map")
+func newAverage(length int) *average {
+	avg := average{
+		buffer:  make([]float64, length),
+		counter: 0,
+		full:    false,
 	}
+	return &avg
 }
 
-func (p *movingAverageProcessor) getBufferLength() int {
-	return p.movingBufLength
-}
-
-func (p *movingAverageProcessor) setBufferLength(length int) error {
-	p.movingBufLength = length
-	return nil
-}
-
-//Adds data in the buffer for a particular namespace
-func (p *movingAverageProcessor) addBufferData(index int, data interface{}, namespace string) error {
-	if _, ok := p.movingAverageMap[namespace]; ok {
-		if index >= len(p.movingAverageMap[namespace].movingAverageBuf) {
-			return errors.New("Incorrect value of index, trying to access non-existing element of buffer")
-		}
-		p.movingAverageMap[namespace].movingAverageBuf[index] = data
-		return nil
-	} else {
-		return errors.New("Namespace is not present in the map")
+// castToFloat is used to convert data hidden under interface{} to float64
+// reflect is used, so that any compatible type can be cast
+func castToFloat(data interface{}) (float64, error) {
+	val := reflect.ValueOf(data)
+	val = reflect.Indirect(val)
+	if !val.Type().ConvertibleTo(floatType) {
+		return 0, fmt.Errorf("Cannot convert %v to float64", val.Type())
 	}
+	return val.Convert(floatType).Float(), nil
 }
 
-//Retrieves the buffer data for a particular namespace
-func (p *movingAverageProcessor) getBufferData(index int, namespace string) interface{} {
-
-	return p.movingAverageMap[namespace].movingAverageBuf[index]
-}
-
-//Since namespace is an array of string. Its required to concatenate to make it a primary unique key
-func concatNameSpace(namespace []string) string {
-	completeNamespace := ""
-	for i := 0; i < len(namespace); i++ {
-		completeNamespace += namespace[i]
+func (p *MAProcessor) calculateMovingAverage(m plugin.Metric) (float64, error) {
+	namespace := m.Namespace.String()
+	value, err := castToFloat(m.Data)
+	if err != nil {
+		return 0, err
 	}
-	return completeNamespace
-}
-
-func (p *movingAverageProcessor) calculateMovingAverage(m plugin.MetricType, logger *log.Logger) (float64, error) {
-
-	namespace := concatNameSpace(m.Namespace().Strings())
-	switch v := m.Data().(type) {
-	default:
-		logger.Warnln(fmt.Sprintf("Unknown data received: Type %T", v))
-		return 0.0, nil
-	case int:
-		if _, ok := p.movingAverageMap[namespace]; ok {
-			counter, err := p.getCounter(namespace)
-			counterCurrent := counter % p.movingBufLength
-			err = p.addBufferData(counterCurrent, m.Data(), namespace)
-			if err != nil {
-				return 0.0, err
-			}
-
-			sum := int(0)
-			//Initial Counter is used to give correct average for initial iterations ie when the buffer is not full
-			initialCounter := 0
-			for i := 0; i < p.movingBufLength; i++ {
-				if p.getBufferData(i, namespace) != nil {
-					initialCounter++
-					sum += p.getBufferData(i, namespace).(int)
-				}
-			}
-			movingAvg := float64(sum) / float64(initialCounter)
-			counterCurrent++
-			p.setCounter(namespace, counterCurrent)
-			return movingAvg, err
-
-		} else {
-
-			//Since map doesnot have an entry of this namespace, it's creating an entry for the namespace.
-			//Also m.data value is inserted into 0th position of the buffer because we know that this buffer is being used for the first time
-			p.movingAverageMap[namespace] = newmovingAverage(p.getBufferLength())
-			err := p.addBufferData(0, m.Data(), namespace)
-			if err != nil {
-				return 0.0, err
-			}
-
-			sum := p.getBufferData(0, namespace).(int)
-			p.setCounter(namespace, 1)
-			return float64(sum), nil
-		}
-
-	case float64:
-
-		if _, ok := p.movingAverageMap[namespace]; ok {
-			counter, err := p.getCounter(namespace)
-			counterCurrent := counter % p.movingBufLength
-			err = p.addBufferData(counterCurrent, m.Data(), namespace)
-			if err != nil {
-				return 0.0, err
-			}
-
-			sum := float64(0)
-			initialCounter := 0
-			for i := 0; i < p.movingBufLength; i++ {
-				if p.getBufferData(i, namespace) != nil {
-					initialCounter++
-					sum += p.getBufferData(i, namespace).(float64)
-				}
-			}
-			movingAvg := float64(sum) / float64(initialCounter)
-			counterCurrent++
-			p.setCounter(namespace, counterCurrent)
-			return movingAvg, err
-
-		}
-		p.movingAverageMap[namespace] = newmovingAverage(p.getBufferLength())
-		err := p.addBufferData(0, m.Data(), namespace)
-		if err != nil {
-			return 0.0, err
-		}
-
-		sum := p.getBufferData(0, namespace).(float64)
-		p.setCounter(namespace, 1)
-		return float64(sum), nil
-
-	case float32:
-		if _, ok := p.movingAverageMap[namespace]; ok {
-			counter, err := p.getCounter(namespace)
-			counterCurrent := counter % p.movingBufLength
-			err = p.addBufferData(counterCurrent, m.Data(), namespace)
-			if err != nil {
-				return 0.0, err
-			}
-
-			sum := float32(0)
-
-			initialCounter := 0
-			for i := 0; i < p.movingBufLength; i++ {
-				if p.getBufferData(i, namespace) != nil {
-					initialCounter++
-					sum += p.getBufferData(i, namespace).(float32)
-				}
-			}
-			movingAvg := float64(sum) / float64(initialCounter)
-			p.setCounter(namespace, counterCurrent)
-			return movingAvg, err
-
-		}
-		p.movingAverageMap[namespace] = newmovingAverage(p.getBufferLength())
-		err := p.addBufferData(0, m.Data(), namespace)
-		if err != nil {
-			return 0.0, err
-		}
-
-		sum := p.getBufferData(0, namespace).(float32)
-		p.setCounter(namespace, 1)
-		return float64(sum), nil
-
-	case uint32:
-		if _, ok := p.movingAverageMap[namespace]; ok {
-			counter, err := p.getCounter(namespace)
-			counterCurrent := counter % p.movingBufLength
-			err = p.addBufferData(counterCurrent, m.Data(), namespace)
-			if err != nil {
-				return 0.0, err
-			}
-
-			sum := uint32(0)
-			initialCounter := 0
-			for i := 0; i < p.movingBufLength; i++ {
-				if p.getBufferData(i, namespace) != nil {
-					initialCounter++
-					sum += p.getBufferData(i, namespace).(uint32)
-				}
-			}
-			movingAvg := float64(sum) / float64(initialCounter)
-			counterCurrent++
-			p.setCounter(namespace, counterCurrent)
-			return movingAvg, err
-
-		}
-		p.movingAverageMap[namespace] = newmovingAverage(p.getBufferLength())
-		err := p.addBufferData(0, m.Data(), namespace)
-		if err != nil {
-			return 0.0, err
-		}
-		sum := p.getBufferData(0, namespace).(uint32)
-		p.setCounter(namespace, 1)
-		return float64(sum), nil
-
-	case uint64:
-		if _, ok := p.movingAverageMap[namespace]; ok {
-			counter, err := p.getCounter(namespace)
-			counterCurrent := counter % p.movingBufLength
-			err = p.addBufferData(counterCurrent, m.Data(), namespace)
-			if err != nil {
-				return 0.0, err
-			}
-
-			sum := uint64(0)
-			initialCounter := 0
-			for i := 0; i < p.movingBufLength; i++ {
-				if p.getBufferData(i, namespace) != nil {
-					initialCounter++
-					sum += p.getBufferData(i, namespace).(uint64)
-				}
-			}
-			movingAvg := float64(sum) / float64(initialCounter)
-			counterCurrent++
-			p.setCounter(namespace, counterCurrent)
-			return movingAvg, err
-
-		}
-		p.movingAverageMap[namespace] = newmovingAverage(p.getBufferLength())
-		err := p.addBufferData(0, m.Data(), namespace)
-		if err != nil {
-			return 0.0, err
-		}
-		sum := p.getBufferData(0, namespace).(uint64)
-		p.setCounter(namespace, 1)
-		return float64(sum), nil
+	avg, ok := p.movingAverageMap[namespace]
+	if !ok {
+		p.movingAverageMap[namespace] = newAverage(p.bufferLength)
+		avg = p.movingAverageMap[namespace]
 	}
-}
-func handleErr(e error) {
-	if e != nil {
-		panic(e)
+	counter := avg.counter % p.bufferLength
+	avg.buffer[counter] = value
+
+	sum := float64(0)
+	for _, data := range avg.buffer {
+		sum += data
 	}
+
+	count := p.bufferLength
+	// Divide sum by counter instead if buffer is not full yet
+	if !avg.full {
+		count = avg.counter + 1
+	}
+	movingAvg := sum / float64(count)
+
+	counter++
+	if counter == p.bufferLength {
+		avg.full = true
+	}
+	avg.counter = counter
+	return movingAvg, nil
 }
 
-func (p *movingAverageProcessor) GetConfigPolicy() (*cpolicy.ConfigPolicy, error) {
-	cp := cpolicy.New()
-	config := cpolicy.NewPolicyNode()
-	r1, err := cpolicy.NewIntegerRule("MovingAvgBufLength", true)
-	handleErr(err)
-	r1.Description = "Buffer Length for moving average "
-	config.Add(r1)
-	cp.Add([]string{""}, config)
-	return cp, nil
+// GetConfigPolicy returns plugin's config policy
+func (p *MAProcessor) GetConfigPolicy() (plugin.ConfigPolicy, error) {
+	cp := plugin.NewConfigPolicy()
+	cp.AddNewIntRule([]string{""}, "MovingAvgBufLength", false,
+		plugin.SetDefaultInt(defaultBufferLength), plugin.SetMinInt(1))
+	return *cp, nil
 }
 
-func (p *movingAverageProcessor) Process(contentType string, content []byte, config map[string]ctypes.ConfigValue) (string, []byte, error) {
+// Process processes metrics
+func (p *MAProcessor) Process(metrics []plugin.Metric, config plugin.Config) ([]plugin.Metric, error) {
 	logger := log.New()
-	logger.Println("movingAverage Processor started")
+	logger.Debug("movingAverage Processor started")
 
-	var metrics []plugin.MetricType
-	//if the MovingAvgBufLength is set to number less than or equal to 0 then the MovingAvgBufferLength is set to 10
-	if config != nil {
-		if config["MovingAvgBufLength"].(ctypes.ConfigValueInt).Value > 0 {
-			p.setBufferLength(config["MovingAvgBufLength"].(ctypes.ConfigValueInt).Value)
-
-		} else {
-			p.setBufferLength(10)
+	if !p.initialized {
+		bufLen, err := config.GetInt("MovingAvgBufLength")
+		if err == nil {
+			if bufLen >= 1 {
+				logger.Debugf("Using buffer length: %v\n", bufLen)
+				p.bufferLength = int(bufLen)
+			}
 		}
-
-	} else {
-		p.setBufferLength(10)
-	}
-
-	//Decodes the content into MetricType
-	dec := gob.NewDecoder(bytes.NewBuffer(content))
-	if err := dec.Decode(&metrics); err != nil {
-		logger.Printf("Error decoding: error=%v content=%v", err, content)
-		return "", nil, err
+		p.initialized = true
 	}
 
 	for i, m := range metrics {
-		//Determining the type of data
-		logger.Printf("Data received %v", metrics[i].Data())
+		logger.Debugf("Data received %v", m.Data)
 		var err error
-		metrics[i].Data_, err = p.calculateMovingAverage(m, logger)
+		metrics[i].Data, err = p.calculateMovingAverage(m)
 		if err != nil {
-			return "", nil, err
+			logger.Warnf(err.Error())
 		}
-		logger.Printf("Moving Average %v", metrics[i].Data())
-
+		logger.Debugf("Moving Average: %v", metrics[i].Data)
 	}
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	enc.Encode(metrics)
-	return contentType, buf.Bytes(), nil
+	return metrics, nil
 }
